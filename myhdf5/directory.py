@@ -14,7 +14,7 @@ With TempDir() as dir:
 
   dir.ls()
 
-# for permanently al directory
+# for permanently al directory. Created files and directories are not deleted.
 With RealDir("your_dir", ignore_exists=True) as dir:
   ...
 
