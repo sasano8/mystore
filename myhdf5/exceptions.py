@@ -1,0 +1,6 @@
+class SerializeError(Exception):
+    ...
+
+
+class FileAlreadyClosedError(Exception):
+    ...
