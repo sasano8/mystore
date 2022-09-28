@@ -2,7 +2,23 @@ import os
 import tempfile
 import uuid
 from typing import Iterable
+import glob
 
+
+"""
+# create a temporary directory, which is cleaned up when you go out of scope
+With TempDir() as dir:
+  file_1 = dir.next()  # publish file name(no file creation)
+  with open(file_1, "w") as f:
+    f.write("")
+
+  dir.ls()
+
+# for permanently al directory
+With RealDir("your_dir", ignore_exists=True) as dir:
+  ...
+
+"""
 
 class Dir:
     def __enter__(self):
@@ -27,6 +43,19 @@ class Dir:
     @property
     def names(self) -> Iterable[str]:
         raise NotImplementedError()
+
+    def next(self, suffix=""):
+        raise NotImplementedError()
+
+    def ls(self, filter="*"):
+        path = os.path.join(self.dirname, "*")
+        return glob.glob(path)
+
+    def touch(self, suffix=""):
+        filename = self.next(suffix)
+        with open(filename, "w") as f:
+            ...
+        return filename
 
 
 class InfinityTempNames(Dir):
@@ -80,14 +109,18 @@ class RealDir(InfinityTempNames):
         self._ignore_exists = ignore_exists
 
         if not ignore_exists and os.path.exists(dirname):
-            raise FileNotFoundError()
+            raise RuntimeError(f"Directory: {dirname} already exsits. If you ignore it use ignore_exists = True.")
 
-        if not os.path.isdir(dirname):
+        if os.path.exists(dirname) and not os.path.isdir(dirname):
             raise RuntimeError("Must be directory.")
 
     def __enter__(self):
         self._dirname = self._tmpdirname
         self._published = set()
+
+        if not os.path.exists(self._dirname):
+            os.mkdir(self._dirname)
+
         return self
 
     def __exit__(self, *args, **kwargs):
